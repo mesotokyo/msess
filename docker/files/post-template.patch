@@ -1,0 +1,11 @@
+--- wordpress/wp-includes/post-template.php	2017-09-24 11:28:46.000000000 +0000
++++ post-template.php	2018-08-18 14:22:48.000000000 +0000
+@@ -281,7 +281,7 @@ function get_the_content( $more_link_tex
+ 	if ( post_password_required( $post ) )
+ 		return get_the_password_form( $post );
+ 
+-	if ( $page > count( $pages ) ) // if the requested page doesn't exist
++	if ( $pages && $page > count( $pages ) ) // if the requested page doesn't exist
+ 		$page = count( $pages ); // give them the highest numbered page that DOES exist
+ 
+ 	$content = $pages[$page - 1];

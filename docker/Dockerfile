@@ -1,14 +1,27 @@
 FROM wordpress
-
-# Wordpress installed in /usr/src/wordpress
+# WordPress (Japanese):
+# https://ja.wordpress.org/wordpress-latest-ja.tar.gz
 
 # plugins are compressed by zip, so need unzip
 RUN apt-get update; apt-get install -y --no-install-recommends unzip
 
+# Remove installed WordPress in /usr/src/wordpress
+RUN set -ex; \
+    cd /usr/src/wordpress; rm -rf *;
+
+# Download WordPress
+RUN set -ex; \
+    cd /usr/src/wordpress; \
+    curl -o wordpress.tar.gz -fSL https://ja.wordpress.org/wordpress-latest-ja.tar.gz; \
+    tar xzf wordpress.tar.gz; \
+    rm wordpress.tar.gz; \
+    mv wordpress wp; \
+    chown -R www-data:www-data wp
+
 # Twenty Twelve
 # https://downloads.wordpress.org/theme/twentytwelve.2.5.zip
 RUN set -ex; \
-    cd /usr/src/wordpress/wp-content/themes; \
+    cd /usr/src/wordpress/wp/wp-content/themes; \
     curl -o tmp.zip -fsSL https://downloads.wordpress.org/theme/twentytwelve.2.5.zip; \
     unzip tmp.zip > /dev/null; \
     rm -f tmp.zip
@@ -16,7 +29,7 @@ RUN set -ex; \
 # Contact Form 7
 # https://downloads.wordpress.org/plugin/contact-form-7.5.0.3.zip
 RUN set -ex; \
-    cd /usr/src/wordpress/wp-content/plugins; \
+    cd /usr/src/wordpress/wp/wp-content/plugins; \
     curl -o tmp.zip -fsSL https://downloads.wordpress.org/plugin/contact-form-7.5.0.3.zip; \
     unzip tmp.zip > /dev/null; \
     rm -f tmp.zip
@@ -24,7 +37,7 @@ RUN set -ex; \
 # Simple Custom CSS
 # https://downloads.wordpress.org/plugin/simple-custom-css.zip
 RUN set -ex; \
-    cd /usr/src/wordpress/wp-content/plugins; \
+    cd /usr/src/wordpress/wp/wp-content/plugins; \
     curl -o tmp.zip -fsSL https://downloads.wordpress.org/plugin/simple-custom-css.zip; \
     unzip tmp.zip > /dev/null; \
     rm -f tmp.zip
@@ -32,7 +45,22 @@ RUN set -ex; \
 # Twitter Cards Meta
 # https://downloads.wordpress.org/plugin/simple-custom-css.zip
 RUN set -ex; \
-    cd /usr/src/wordpress/wp-content/plugins; \
+    cd /usr/src/wordpress/wp/wp-content/plugins; \
     curl -o tmp.zip -fsSL https://downloads.wordpress.org/plugin/twitter-cards-meta.2.9.0.zip; \
     unzip tmp.zip > /dev/null; \
     rm -f tmp.zip
+
+# install .htaccess
+ADD files/dothtaccess /usr/src/wordpress/.htaccess    
+
+# enable .htaccess
+#ADD files/allow_htaccess.conf /etc/apache2/sites-enabled/allow_htaccess.conf
+
+ADD files/index.php /usr/src/wordpress/index.php
+
+# patch for warning (for twittercard)
+ADD files/post-template.patch /tmp/
+RUN set -ex; \
+    cd /usr/src/wordpress/wp/wp-includes; \
+    patch < /tmp/post-template.patch
+
